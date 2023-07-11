@@ -18,8 +18,10 @@ jobs:
           repository: Xilinx/finn
           ref: dev
           path: finn
+      - name: test
+        run: touch test.txt
       - name: Build Docker image
-        run: ./experiment-manager/experiment-manager/image_build/build_docker_image.sh
+        run: ./image_build/build_docker_image.sh
         shell: bash
         
   build_apptainer:
