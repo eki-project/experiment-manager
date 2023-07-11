@@ -10,10 +10,10 @@ jobs:
     name: Build Docker image
     runs-on: self-hosted
     steps:
-      - name: Checkout job-manager
+      - name: Checkout experiment-manager
         uses: actions/checkout@v3
         with:
-          path: job-manager
+          path: experiment-manager
       - name: Checkout FINN
         uses: actions/checkout@v3
         with:
@@ -21,7 +21,7 @@ jobs:
           ref: dev
           path: finn
       - name: Build Docker image
-        run: ./job-manager/image_build/build_docker_image.sh
+        run: ./experiment-manager/image_build/build_docker_image.sh
         shell: bash
         
   build_apptainer:
@@ -29,13 +29,13 @@ jobs:
     runs-on: self-hosted
     needs: build_docker
     steps:
-      - name: Checkout job-manager
+      - name: Checkout experiment-manager
         uses: actions/checkout@v3
         with:
-          path: job-manager
+          path: experiment-manager
       - name: Build Apptainer image
-        run: ./job-manager/image_build/build_apptainer_image.sh
+        run: ./experiment-manager/image_build/build_apptainer_image.sh
         shell: bash
       - name: Distribute Apptainer image
-        run: ./job-manager/image_build/distribute_image.sh
+        run: ./experiment-manager/image_build/distribute_image.sh
         shell: bash
