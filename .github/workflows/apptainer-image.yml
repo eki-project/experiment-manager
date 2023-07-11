@@ -19,7 +19,7 @@ jobs:
           ref: dev
           path: finn
       - name: Build Docker image
-        run: ./experiment-manager/experiment-manager/image_build/build_docker_image.sh
+        run: ./experiment-manager/image_build/build_docker_image.sh
         shell: bash
         
   build_apptainer:
@@ -30,8 +30,8 @@ jobs:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
       - name: Build Apptainer image
-        run: ./experiment-manager/experiment-manager/image_build/build_apptainer_image.sh
+        run: ./experiment-manager/image_build/build_apptainer_image.sh
         shell: bash
       - name: Distribute Apptainer image
-        run: ./experiment-manager/experiment-manager/image_build/distribute_image.sh
+        run: ./experiment-manager/image_build/distribute_image.sh
         shell: bash
