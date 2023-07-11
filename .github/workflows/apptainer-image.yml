@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
-        with:
-          path: experiment-manager
       - name: Checkout FINN
         uses: actions/checkout@v3
         with:
@@ -31,8 +29,6 @@ jobs:
     steps:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
-        with:
-          path: experiment-manager
       - name: Build Apptainer image
         run: ./experiment-manager/image_build/build_apptainer_image.sh
         shell: bash
