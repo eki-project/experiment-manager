@@ -4,16 +4,16 @@ on:
   workflow_dispatch:
     inputs: 
       finn_use_custom:
-        description: 'Use custom commit instead of Xilinx/finn'
+        description: 'Use custom commit instead of Xilinx/finn/dev'
         required: true
         default: false
         type: boolean
       finn_owner:
-        description: 'finn repository owner to use'
+        description: 'Custom finn repository owner to use'
         required: false
-        default: 'Xilinx'
+        default: 'xilinx'
       finn_commit:
-        description: 'finn repository commit to use'
+        description: 'Custom finn repository commit to use'
         required: false
         default: ''
   schedule:
@@ -46,7 +46,7 @@ jobs:
         id: get_finn_sha
         run: echo "sha_short=$(git -C finn rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Build Docker image
-        run: cd ./finn && build -f docker/Dockerfile.finn --tag=finn_docker_export .
+        run: cd ./finn && docker build -f docker/Dockerfile.finn --tag=finn_docker_export .
         shell: bash
         #todo: nocache
         #todo: check if image changed and skip
