@@ -46,7 +46,7 @@ jobs:
         id: get_finn_sha
         run: echo "sha_short=$(git -C finn rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Build Docker image
-        run: cd ./finn && docker build -f docker/Dockerfile.finn --tag=finn_docker_export .
+        run: cd ./finn && docker build --no-cache -f docker/Dockerfile.finn --tag=finn_docker_export .
         shell: bash
         #todo: nocache
         #todo: check if image changed and skip
@@ -62,7 +62,7 @@ jobs:
         run: apptainer build finn_singularity_image.sif docker-daemon://finn_docker_export:latest
         shell: bash
       - name: Clear Apptainer cache
-        run: apptainer cache clean
+        run: echo 'y' | apptainer cache clean
         shell: bash
       - name: Push image to GitHub registry
         run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx_dev:${{ needs.build_docker.outputs.finn_sha_short }}
