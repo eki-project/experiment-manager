@@ -3,10 +3,10 @@ name: ApptainerImage
 on:
   workflow_dispatch:
     inputs: 
-      finn_use_xilinx_dev:
-        description: 'Use Xilinx/finn dev branch'
+      finn_use_custom:
+        description: 'Use custom commit instead of Xilinx/finn'
         required: true
-        default: true
+        default: false
         type: boolean
       finn_owner:
         description: 'finn repository owner to use'
@@ -31,24 +31,26 @@ jobs:
       - name: Checkout FINN (Xilinx/finn)
         uses: actions/checkout@v3
         with:
-          repository: ${{ inputs.finn_owner }}/finn
-          ref: ${{ inputs.finn_commit }}
-          path: finn
-        if: ${{ inputs.finn_use_xilinx_dev }}
-      - name: Checkout FINN (custom)
-        uses: actions/checkout@v3
-        with:
           repository: Xilinx/finn
           ref: dev
           path: finn
-        if: ${{ !inputs.finn_use_xilinx_dev }}
+        if: ${{ !inputs.finn_use_custom }}
+      - name: Checkout FINN (custom)
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.finn_owner }}/finn
+          ref: ${{ inputs.finn_commit }}
+          path: finn
+        if: ${{ inputs.finn_use_custom }}
       - name: Set outputs
         id: get_finn_sha
         run: echo "sha_short=$(git -C finn rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Build Docker image
-        run: ./image_build/build_docker_image.sh
+        run: cd ./finn && build -f docker/Dockerfile.finn --tag=finn_docker_export .
         shell: bash
+        #todo: nocache
         #todo: check if image changed and skip
+        #todo: cleanup
   build_apptainer:
     name: Build Apptainer image
     runs-on: self-hosted
@@ -57,9 +59,16 @@ jobs:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
       - name: Build Apptainer image
-        run: ./image_build/build_apptainer_image.sh
+        run: apptainer build finn_singularity_image.sif docker-daemon://finn_docker_export:latest
+        shell: bash
+      - name: Clear Apptainer cache
+        run: apptainer cache clean
         shell: bash
       - name: Push image to GitHub registry
-        run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_Xilinx_dev:${{ needs.build_docker.outputs.finn_sha_short }}
+        run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx_dev:${{ needs.build_docker.outputs.finn_sha_short }}
         shell: bash
-        if: ${{ inputs.finn_use_xilinx_dev }}
+        if: ${{ !inputs.finn_use_custom }}
+      - name: Push image to GitHub registry
+        run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_${{ inputs.finn_owner }}:${{ needs.build_docker.outputs.finn_sha_short }}
+        shell: bash
+        if: ${{ inputs.finn_use_custom }}
