@@ -31,7 +31,7 @@ jobs:
       - name: Checkout FINN (Xilinx/finn)
         uses: actions/checkout@v3
         with:
-          repository: Xilinx/finn
+          repository: Xilinx/finn/dev
           ref: dev
           path: finn
         if: ${{ !inputs.finn_use_custom }}
@@ -48,9 +48,9 @@ jobs:
       - name: Build Docker image
         run: cd ./finn && docker build --no-cache -f docker/Dockerfile.finn --tag=finn_docker_export .
         shell: bash
-        #todo: nocache
-        #todo: check if image changed and skip
-        #todo: cleanup
+      - name: Clean Docker cache
+        run: echo 'y' | docker image prune
+        shell: bash
   build_apptainer:
     name: Build Apptainer image
     runs-on: self-hosted
@@ -64,11 +64,15 @@ jobs:
       - name: Clear Apptainer cache
         run: echo 'y' | apptainer cache clean
         shell: bash
-      - name: Push image to GitHub registry
-        run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx_dev:${{ needs.build_docker.outputs.finn_sha_short }}
+      - name: Push image to GitHub registry (xilinx)
+        run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:${{ needs.build_docker.outputs.finn_sha_short }}
         shell: bash
         if: ${{ !inputs.finn_use_custom }}
-      - name: Push image to GitHub registry
+      - name: Push image to GitHub registry (xilinx, dev tag)
+        run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:dev
+        shell: bash
+        if: ${{ !inputs.finn_use_custom }}
+      - name: Push image to GitHub registry (custom)
         run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_${{ inputs.finn_owner }}:${{ needs.build_docker.outputs.finn_sha_short }}
         shell: bash
         if: ${{ inputs.finn_use_custom }}
