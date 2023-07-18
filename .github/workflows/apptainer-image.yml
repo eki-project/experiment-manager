@@ -28,10 +28,10 @@ jobs:
     steps:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
-      - name: Checkout FINN (Xilinx/finn)
+      - name: Checkout FINN (Xilinx/finn/dev)
         uses: actions/checkout@v3
         with:
-          repository: Xilinx/finn/dev
+          repository: Xilinx/finn
           ref: dev
           path: finn
         if: ${{ !inputs.finn_use_custom }}
