@@ -24,7 +24,8 @@ jobs:
     name: Build Docker image
     runs-on: self-hosted
     outputs:
-      finn_sha_short: ${{ steps.get_finn_sha.outputs.sha_short }}
+      check_not_exists: ${{ steps.check_if_exists.outputs.check_not_exists }}
+      finn_sha_short: ${{ steps.get_finn_sha.outputs.finn_sha_short }}
     steps:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
@@ -42,19 +43,30 @@ jobs:
           ref: ${{ inputs.finn_commit }}
           path: finn
         if: ${{ inputs.finn_use_custom }}
-      - name: Set outputs
+      - name: Get FINN commit hash
         id: get_finn_sha
-        run: echo "sha_short=$(git -C finn rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "finn_sha_short=$(git -C finn rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Check if image exists
+        id: check_if_exists
+        run: apptainer pull -F --disable-cache gha_tmp.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:${{ steps.get_finn_sha.outputs.finn_sha_short }} ; echo "check_not_exists=$?" >> $GITHUB_OUTPUT
+        if: ${{ !inputs.finn_use_custom }}
       - name: Build Docker image
         run: cd ./finn && docker build --no-cache -f docker/Dockerfile.finn --tag=finn_docker_export .
         shell: bash
-      - name: Clean Docker cache
+        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outputs.check_not_exists != 0 }}
+      - name: Clean Docker image cache
         run: echo 'y' | docker image prune
         shell: bash
+        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outputs.check_not_exists != 0 }}
+      - name: Clean Docker build cache
+        run: echo 'y' | docker builder prune
+        shell: bash
+        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outputs.check_not_exists != 0 }}
   build_apptainer:
     name: Build Apptainer image
     runs-on: self-hosted
     needs: build_docker
+    if: ${{ inputs.finn_use_custom || needs.build_docker.outputs.check_not_exists != 0 }}
     steps:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
@@ -68,7 +80,7 @@ jobs:
         run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:${{ needs.build_docker.outputs.finn_sha_short }}
         shell: bash
         if: ${{ !inputs.finn_use_custom }}
-      - name: Push image to GitHub registry (xilinx, dev tag)
+      - name: Push image to GitHub registry (xilinx, second time to set dev tag)
         run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:dev
         shell: bash
         if: ${{ !inputs.finn_use_custom }}
