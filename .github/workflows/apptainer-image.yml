@@ -50,6 +50,7 @@ jobs:
         id: check_if_exists
         run: apptainer pull -F --disable-cache gha_tmp.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:${{ steps.get_finn_sha.outputs.finn_sha_short }} ; echo "check_not_exists=$?" >> $GITHUB_OUTPUT
         if: ${{ !inputs.finn_use_custom }}
+        continue-on-error: true
       - name: Build Docker image
         run: cd ./finn && docker build --no-cache -f docker/Dockerfile.finn --tag=finn_docker_export .
         shell: bash
