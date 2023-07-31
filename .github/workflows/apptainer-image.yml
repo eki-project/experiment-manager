@@ -24,7 +24,7 @@ jobs:
     name: Build Docker image
     runs-on: self-hosted
     outputs:
-      check_not_exists: ${{ steps.check_if_exists.outputs.check_not_exists }}
+      exists: ${{ steps.check_if_exists.outcome }}
       finn_sha_short: ${{ steps.get_finn_sha.outputs.finn_sha_short }}
     steps:
       - name: Checkout experiment-manager
@@ -48,26 +48,26 @@ jobs:
         run: echo "finn_sha_short=$(git -C finn rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Check if image exists
         id: check_if_exists
-        run: apptainer pull -F --disable-cache gha_tmp.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:${{ steps.get_finn_sha.outputs.finn_sha_short }} ; echo "check_not_exists=$?" >> $GITHUB_OUTPUT
+        run: apptainer pull -F --disable-cache gha_tmp.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:${{ steps.get_finn_sha.outputs.finn_sha_short }}
         if: ${{ !inputs.finn_use_custom }}
         continue-on-error: true
       - name: Build Docker image
         run: cd ./finn && docker build --no-cache -f docker/Dockerfile.finn --tag=finn_docker_export .
         shell: bash
-        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outputs.check_not_exists != 0 }}
+        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outcome == 'failure' }}
       - name: Clean Docker image cache
         run: echo 'y' | docker image prune
         shell: bash
-        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outputs.check_not_exists != 0 }}
+        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outcome == 'failure' }}
       - name: Clean Docker build cache
         run: echo 'y' | docker builder prune
         shell: bash
-        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outputs.check_not_exists != 0 }}
+        if: ${{ inputs.finn_use_custom || steps.check_if_exists.outcome == 'failure' }}
   build_apptainer:
     name: Build Apptainer image
     runs-on: self-hosted
     needs: build_docker
-    if: ${{ inputs.finn_use_custom || needs.build_docker.outputs.check_not_exists != 0 }}
+    if: ${{ inputs.finn_use_custom || needs.build_docker.outputs.exists == 'failure' }}
     steps:
       - name: Checkout experiment-manager
         uses: actions/checkout@v3
