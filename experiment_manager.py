@@ -10,13 +10,14 @@ import spython.main as singularity
 from pathlib import Path
 
 class system():
-    def __init__(self, ssh_target, hostname, username, workdir, environment, use_slurm):
+    def __init__(self, ssh_target, hostname, username, workdir, environment, use_slurm, ramdisk_path):
         self.ssh_target = ssh_target
         self.hostname = hostname
         self.username = username
         self.workdir = workdir
         self.environment = environment
         self.use_slurm = use_slurm
+        self.ramdisk_path = ramdisk_path
 
     # add system-specific first-time setup
         # setup (passwordless) ssh (to server)
@@ -64,13 +65,14 @@ class repository():
     
 
 class experiment():
-    def __init__(self, system, tag="job", dependencies=None, environment={}, cmd=None, slurm_options=None):
+    def __init__(self, system, tag="job", dependencies=None, environment={}, cmd=None, slurm_options=None, use_ramdisk=False):
         self.system = system
         self.tag = tag
         self.dependencies = dependencies
         self.environment = environment
         self.cmd = cmd
         self.slurm_options = slurm_options
+        self.use_ramdisk = use_ramdisk
 
     def prepare_job_dir(self):
         time = datetime.now()
@@ -95,16 +97,29 @@ class experiment():
         script = ""
         for var in self.environment:
             script += "export {var}={value}\n".format(var=var, value=self.environment[var])
-        script += "export FINN_HOST_BUILD_DIR={}\n".format(os.path.join(self.job_dir_path, "FINN_BUILD"))
         script_experiment = io.StringIO(script)
 
         if self.system.use_slurm:
             script = "#!/bin/bash\n"
-            for command in self.slurm_options["extra_commands"]:
+
+            if self.use_ramdisk:
+                script += "cp -dR . {ramdisk_path}\n".format(ramdisk_path=self.system.ramdisk_path)
+                script += "cd {ramdisk_path}\n".format(ramdisk_path=self.system.ramdisk_path)
+                script += "rm slurm-*.out\n" # delete copy of .out file so it is not copied back afterwards
+
+            for command in self.slurm_options["pre_commands"]:
                 script += "{}\n".format(command)
-            script += "{}".format(self.cmd) # user/payload command
+
+            script += "{}\n".format(self.cmd) # user/payload command
+
+            for command in self.slurm_options["post_commands"]:
+                script += "{}\n".format(command)
+
+            if self.use_ramdisk:
+                script += "cp -dR {ramdisk_path}/. {job_dir_path}\n".format(ramdisk_path=self.system.ramdisk_path, job_dir_path=self.job_dir_path)
+
             script_slurm = io.StringIO(script)
-        
+
         with Connection(self.system.ssh_target) as c:
             result = c.put(script_system, os.path.join(self.job_dir_path, "system_env.sh"))
             result = c.put(script_experiment, os.path.join(self.job_dir_path, "experiment_env.sh"))
@@ -119,7 +134,7 @@ class experiment():
             if self.system.use_slurm:
                 command = "sbatch "
                 for option in self.slurm_options:
-                    if option not in ["extra_commands"]:
+                    if option not in ["pre_commands", "post_commands"]:
                         command += "{option}={value} ".format(option=option, value=self.slurm_options[option])
                 command += "--job-name={} ".format(self.job_dir)
                 command += "slurm_script.sh"
