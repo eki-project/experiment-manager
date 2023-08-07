@@ -103,7 +103,7 @@ class experiment():
             script = "#!/bin/bash\n"
 
             if self.use_ramdisk:
-                script += "cp -dR . {ramdisk_path}\n".format(ramdisk_path=self.system.ramdisk_path)
+                script += "cp -dfR . {ramdisk_path}\n".format(ramdisk_path=self.system.ramdisk_path)
                 script += "cd {ramdisk_path}\n".format(ramdisk_path=self.system.ramdisk_path)
                 script += "rm slurm-*.out\n" # delete copy of .out file so it is not copied back afterwards
 
@@ -116,7 +116,7 @@ class experiment():
                 script += "{}\n".format(command)
 
             if self.use_ramdisk:
-                script += "cp -dR {ramdisk_path}/. {job_dir_path}\n".format(ramdisk_path=self.system.ramdisk_path, job_dir_path=self.job_dir_path)
+                script += "cp -dfR {ramdisk_path}/. {job_dir_path}\n".format(ramdisk_path=self.system.ramdisk_path, job_dir_path=self.job_dir_path)
 
             script_slurm = io.StringIO(script)
 
