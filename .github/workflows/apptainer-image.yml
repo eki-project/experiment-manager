@@ -77,6 +77,18 @@ jobs:
       - name: Clear Apptainer cache
         run: echo 'y' | apptainer cache clean
         shell: bash
+      - name: Push image to PC2DATA (xilinx)
+        run: cp finn_singularity_image.sif /mnt/pc2/hpc-prf-ekiapp/FINN_IMAGES/xilinx/finn_${{ needs.build_docker.outputs.finn_sha_short }}.sif
+        shell: bash
+        if: ${{ !inputs.finn_use_custom }}
+      - name: Push image to PC2DATA (xilinx, second time to set dev tag)
+        run: cp finn_singularity_image.sif /mnt/pc2/hpc-prf-ekiapp/FINN_IMAGES/xilinx/finn_dev.sif
+        shell: bash
+        if: ${{ !inputs.finn_use_custom }}
+      - name: Push image to PC2DATA (custom)
+        run: mkdir -p /mnt/pc2/hpc-prf-ekiapp/FINN_IMAGES/${{ inputs.finn_owner }} && cp finn_singularity_image.sif /mnt/pc2/hpc-prf-ekiapp/FINN_IMAGES/${{ inputs.finn_owner }}/finn_${{ needs.build_docker.outputs.finn_sha_short }}.sif
+        shell: bash
+        if: ${{ inputs.finn_use_custom }}
       - name: Push image to GitHub registry (xilinx)
         run: apptainer push finn_singularity_image.sif oras://ghcr.io/eki-project/experiment-manager/finn_apptainer_xilinx:${{ needs.build_docker.outputs.finn_sha_short }}
         shell: bash
