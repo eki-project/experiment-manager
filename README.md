@@ -5,4 +5,4 @@ Also contains the nightly Singularity image build for the official Xilinx/finn/d
 
 [![ApptainerImage](https://github.com/eki-project/experiment-manager/actions/workflows/apptainer-image.yml/badge.svg)](https://github.com/eki-project/experiment-manager/actions/workflows/apptainer-image.yml)
 
-Via the Github Actions page, this can also be manually triggered on public Github forks or custom branches/commits of FINN.
+Via the Github Actions page, this can also be manually triggered on public Github forks or custom branches/commits of FINN. The resulting Singularity images are pushed to the Github container registry of this repo and to the PC2DATA fileshare.
