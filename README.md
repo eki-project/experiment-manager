@@ -1,5 +1,5 @@
 # experiment-manager
-Repository to collect scripts for launching and managing FINN-related synthesis or training jobs on Noctua 2.
+Repository to collect scripts for launching and managing FINN-related synthesis or training jobs on Noctua 2 or other target machines.
 
 Also contains the nightly Singularity image build for the official Xilinx/finn/dev branch:
 
