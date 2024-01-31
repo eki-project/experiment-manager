@@ -28,16 +28,16 @@ jobs:
       finn_sha_short: ${{ steps.get_finn_sha.outputs.finn_sha_short }}
     steps:
       - name: Checkout experiment-manager
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout FINN (Xilinx/finn/dev)
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Xilinx/finn
           ref: dev
           path: finn
         if: ${{ !inputs.finn_use_custom }}
       - name: Checkout FINN (custom)
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.finn_owner }}/finn
           ref: ${{ inputs.finn_commit }}
@@ -70,7 +70,7 @@ jobs:
     if: ${{ inputs.finn_use_custom || needs.build_docker.outputs.exists == 'failure' }}
     steps:
       - name: Checkout experiment-manager
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build Apptainer image
         run: apptainer build finn_singularity_image.sif docker-daemon://finn_docker_export:latest
         shell: bash
