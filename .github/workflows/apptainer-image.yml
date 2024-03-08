@@ -16,8 +16,6 @@ on:
         description: 'Custom finn repository commit to use'
         required: false
         default: ''
-  schedule:
-    - cron: '0 2 * * *'
 
 jobs:
   build_docker:
