@@ -6,7 +6,7 @@ import subprocess
 from datetime import datetime
 from fabric import Connection
 from patchwork import transfers
-import spython.main as singularity
+#import spython.main as singularity
 from pathlib import Path
 
 class system():

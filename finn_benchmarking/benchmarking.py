@@ -3,9 +3,11 @@ import json
 import os
 import sys
 import traceback
+import time
 
 from bench_rtl_swg import bench_rtl_swg
 from bench_mvau import bench_mvau
+from bench_transformer import bench_transformer
 
 def main():
     # Gather job array info
@@ -34,6 +36,8 @@ def main():
         bench = bench_rtl_swg
     elif sys.argv[1] == "mvau":
         bench = bench_mvau
+    elif sys.argv[1] == "transformer":
+        bench = bench_transformer
     else:
         print("ERROR: benchmark not found")
         return
@@ -90,8 +94,9 @@ def main():
             "params": params
          }
 
+        start_time = time.time()
         try:
-            output_dict = bench(params)
+            output_dict = bench(params, task_id, run_id, results_dir)
             if output_dict is None:
                 output_dict = {}
                 log_dict["status"] = "skipped"
@@ -104,6 +109,7 @@ def main():
             log_dict["status"] = "failed"
             print("Run failed: " + traceback.format_exc())
 
+        log_dict["total_time"] = int(time.time() - start_time)
         log_dict["output"] = output_dict
         log.append(log_dict)
 
