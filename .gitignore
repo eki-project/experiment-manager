@@ -1,5 +1,8 @@
 tmp
 cache
+configs
+models
+*.cache/
 
 ########## DEFAULT PYTHON GITIGNORE ##########
 # Byte-compiled / optimized / DLL files
